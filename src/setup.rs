@@ -49,13 +49,20 @@ pub fn spawn_textured_plane(
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
     grid_state: Option<Res<crate::components::GridState>>,
+    mut loaded_textures: ResMut<crate::components::LoadedTextures>,
 ) {
     // Use grid_state if available, otherwise use default values (10x10)
     let size_x = grid_state.as_ref().map(|gs| gs.size_x).unwrap_or(10) as f32;
     let size_z = grid_state.as_ref().map(|gs| gs.size_z).unwrap_or(10) as f32;
     
     // Load the texture
-    let texture_handle = asset_server.load("tree.png");
+    let texture_path = "tree.png";
+    let texture_handle = asset_server.load(texture_path);
+    
+    // Register the texture in loaded textures
+    if !loaded_textures.textures.contains(&texture_path.to_string()) {
+        loaded_textures.textures.push(texture_path.to_string());
+    }
     
     // Create a plane mesh that matches the grid size using Rectangle
     // Rectangle is 1x1 by default, so we scale it to match grid dimensions
@@ -75,6 +82,7 @@ pub fn spawn_textured_plane(
         MeshMaterial3d(material),
         Transform::from_translation(Vec3::new(0.0, 0.01, 0.0))
             .with_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2) * Quat::from_rotation_z(std::f32::consts::PI)),
+        crate::components::TexturedPlane,
     ));
 }
 

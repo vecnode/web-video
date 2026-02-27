@@ -49,8 +49,37 @@ pub struct StreamsPanelState {
     pub is_visible: bool,
 }
 
+#[derive(Resource, Default)]
+pub struct LoadedTextures {
+    pub textures: Vec<String>, // Store texture paths/names
+}
+
 #[derive(Component)]
 pub struct GridLine;
+
+#[derive(Component)]
+pub struct TexturedPlane;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum AspectRatio {
+    Ratio16_9,
+    Square,
+}
+
+#[derive(Resource)]
+pub struct AspectRatioState {
+    pub current: AspectRatio,
+    pub previous: AspectRatio,
+}
+
+impl Default for AspectRatioState {
+    fn default() -> Self {
+        Self {
+            current: AspectRatio::Square,
+            previous: AspectRatio::Square,
+        }
+    }
+}
 
 #[derive(Resource)]
 pub struct GridState {

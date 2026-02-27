@@ -3,7 +3,7 @@
 
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
-use crate::components::{CameraProjectionState, EguiLayoutState, GridState, StreamsPanelState};
+use crate::components::{CameraProjectionState, EguiLayoutState, GridState, StreamsPanelState, LoadedTextures, AspectRatioState, AspectRatio};
 use crate::constants::{EGUI_TOP_BAR_HEIGHT, EGUI_SECOND_TOP_BAR_HEIGHT, EGUI_LEFT_PANEL_WIDTH};
 
 pub fn egui_controls_ui(
@@ -12,6 +12,8 @@ pub fn egui_controls_ui(
     mut layout_state: ResMut<EguiLayoutState>,
     mut grid_state: ResMut<GridState>,
     mut streams_panel_state: ResMut<StreamsPanelState>,
+    loaded_textures: Res<LoadedTextures>,
+    mut aspect_ratio_state: ResMut<AspectRatioState>,
     mut _commands: Commands,
     mut queries: ParamSet<(
         Query<(Entity, &mut Transform, &mut GlobalTransform, &mut Projection), (With<bevy::prelude::Camera3d>, With<crate::components::RightCamera>)>,
@@ -109,6 +111,27 @@ pub fn egui_controls_ui(
                                 .suffix(" m")).changed() {
                                 grid_state.size_z = size_z;
                             }
+                            
+                            ui.separator();
+                            
+                            // Texture Aspect Ratio controls
+                            ui.label("Texture Aspect Ratio");
+                            
+                            ui.horizontal(|ui| {
+                                if ui.selectable_label(
+                                    aspect_ratio_state.current == AspectRatio::Ratio16_9,
+                                    "16:9"
+                                ).clicked() {
+                                    aspect_ratio_state.current = AspectRatio::Ratio16_9;
+                                }
+                                
+                                if ui.selectable_label(
+                                    aspect_ratio_state.current == AspectRatio::Square,
+                                    "Square"
+                                ).clicked() {
+                                    aspect_ratio_state.current = AspectRatio::Square;
+                                }
+                            });
                         }); // Close vertical
                     }); // Close ScrollArea
             }); // Close SidePanel
@@ -285,11 +308,37 @@ pub fn egui_controls_ui(
                         let right_panel_content_width = ui.available_width();
                         layout_state.right_panel_content_width = right_panel_content_width;
                         
-                        // Add left padding to match SidePanel's default padding
-                        //ui.add_space(8.0); // Small left padding similar to SidePanel
+                        // Calculate available height for the tracks section (1/3 of inspector height)
+                        let inspector_height = inspector_rect.height();
+                        let tracks_section_height = inspector_height / 3.0;
                         
                         ui.vertical(|ui| {
                             ui.heading("Inspector");
+                            ui.separator();
+                            
+                            // Tracks section with collapsible header
+                            egui::CollapsingHeader::new("Tracks")
+                                .default_open(true)
+                                .show(ui, |ui| {
+                                    // Constrain the height to 1/3 of inspector
+                                    ui.set_max_height(tracks_section_height);
+                                    
+                                    if loaded_textures.textures.is_empty() {
+                                        ui.label("No textures loaded");
+                                    } else {
+                                        egui::ScrollArea::vertical()
+                                            .max_height(tracks_section_height - 30.0) // Reserve space for header
+                                            .show(ui, |ui| {
+                                                for texture_path in &loaded_textures.textures {
+                                                    ui.horizontal(|ui| {
+                                                        ui.label("📄"); // Simple icon
+                                                        ui.label(texture_path);
+                                                    });
+                                                }
+                                            });
+                                    }
+                                });
+                            
                             ui.separator();
                         });
                     });

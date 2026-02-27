@@ -36,6 +36,8 @@ fn main() {
         .init_resource::<components::EguiLayoutState>()
         .init_resource::<components::GridState>()
         .init_resource::<components::StreamsPanelState>()
+        .init_resource::<components::LoadedTextures>()
+        .init_resource::<components::AspectRatioState>()
         .add_systems(
             Startup,
             (
@@ -49,6 +51,7 @@ fn main() {
             Update,
             (
                 update_grid_dimensions,
+                update_texture_aspect_ratio,
             ),
         )
         .add_systems(
