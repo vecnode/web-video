@@ -81,6 +81,27 @@ impl Default for AspectRatioState {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum TextureMode {
+    Normal,
+    Stretch,
+}
+
+#[derive(Resource)]
+pub struct TextureModeState {
+    pub current: TextureMode,
+    pub previous: TextureMode,
+}
+
+impl Default for TextureModeState {
+    fn default() -> Self {
+        Self {
+            current: TextureMode::Stretch,
+            previous: TextureMode::Stretch,
+        }
+    }
+}
+
 #[derive(Resource)]
 pub struct GridState {
     pub size_x: i32, // Grid size in X direction (meters)

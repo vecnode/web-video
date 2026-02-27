@@ -69,8 +69,10 @@ pub fn spawn_textured_plane(
     let plane_mesh = meshes.add(Rectangle::new(size_x, size_z));
     
     // Create material with the texture
+    // Use unlit material so the texture appears exactly as in the image file, without lighting effects
     let material = materials.add(StandardMaterial {
         base_color_texture: Some(texture_handle),
+        unlit: true, // Disable lighting to show texture exactly as it appears in the image
         ..default()
     });
     

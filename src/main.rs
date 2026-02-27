@@ -38,6 +38,7 @@ fn main() {
         .init_resource::<components::StreamsPanelState>()
         .init_resource::<components::LoadedTextures>()
         .init_resource::<components::AspectRatioState>()
+        .init_resource::<components::TextureModeState>()
         .add_systems(
             Startup,
             (

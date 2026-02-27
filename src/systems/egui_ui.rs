@@ -3,7 +3,7 @@
 
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
-use crate::components::{CameraProjectionState, EguiLayoutState, GridState, StreamsPanelState, LoadedTextures, AspectRatioState, AspectRatio};
+use crate::components::{CameraProjectionState, EguiLayoutState, GridState, StreamsPanelState, LoadedTextures, AspectRatioState, AspectRatio, TextureModeState, TextureMode};
 use crate::constants::{EGUI_TOP_BAR_HEIGHT, EGUI_SECOND_TOP_BAR_HEIGHT, EGUI_LEFT_PANEL_WIDTH};
 
 pub fn egui_controls_ui(
@@ -14,6 +14,7 @@ pub fn egui_controls_ui(
     mut streams_panel_state: ResMut<StreamsPanelState>,
     loaded_textures: Res<LoadedTextures>,
     mut aspect_ratio_state: ResMut<AspectRatioState>,
+    mut texture_mode_state: ResMut<TextureModeState>,
     mut _commands: Commands,
     mut queries: ParamSet<(
         Query<(Entity, &mut Transform, &mut GlobalTransform, &mut Projection), (With<bevy::prelude::Camera3d>, With<crate::components::RightCamera>)>,
@@ -130,6 +131,27 @@ pub fn egui_controls_ui(
                                     "Square"
                                 ).clicked() {
                                     aspect_ratio_state.current = AspectRatio::Square;
+                                }
+                            });
+                            
+                            ui.separator();
+                            
+                            // Texture Mode controls
+                            ui.label("Texture Mode");
+                            
+                            ui.horizontal(|ui| {
+                                if ui.selectable_label(
+                                    texture_mode_state.current == TextureMode::Normal,
+                                    "Normal"
+                                ).clicked() {
+                                    texture_mode_state.current = TextureMode::Normal;
+                                }
+                                
+                                if ui.selectable_label(
+                                    texture_mode_state.current == TextureMode::Stretch,
+                                    "Stretch"
+                                ).clicked() {
+                                    texture_mode_state.current = TextureMode::Stretch;
                                 }
                             });
                         }); // Close vertical
