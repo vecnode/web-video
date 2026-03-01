@@ -35,6 +35,7 @@ fn main() {
         .init_resource::<components::CameraProjectionState>()
         .init_resource::<components::EguiLayoutState>()
         .init_resource::<components::GridState>()
+        .init_resource::<components::GridVisibilityState>()
         .init_resource::<components::StreamsPanelState>()
         .init_resource::<components::LoadedTextures>()
         .init_resource::<components::AspectRatioState>()
@@ -51,6 +52,7 @@ fn main() {
         .add_systems(
             Update,
             (
+                update_grid_visibility,
                 update_grid_dimensions,
                 update_texture_aspect_ratio,
             ),

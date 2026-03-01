@@ -2,7 +2,7 @@
 // Copyright (C) 2026 vecnode
 
 use bevy::prelude::*;
-use crate::constants::*;
+use crate::constants::{GRID_LINE_RADIUS, GRID_COLOR, GRID_BORDER_RADIUS, GRID_BORDER_COLOR, FRONT_LIGHT_ILLUMINANCE, BACK_LIGHT_ILLUMINANCE};
 
 pub fn spawn_grid(
     mut commands: Commands,
@@ -15,32 +15,88 @@ pub fn spawn_grid(
     let size_z = grid_state.as_ref().map(|gs| gs.size_z).unwrap_or(10) as f32;
     let half_size_x = size_x / 2.0;
     let half_size_z = size_z / 2.0;
-    let num_lines_x = grid_state.as_ref().map(|gs| gs.size_x).unwrap_or(10) + 1;
-    let num_lines_z = grid_state.as_ref().map(|gs| gs.size_z).unwrap_or(10) + 1;
+    
+    // Use grid_state dimensions to determine number of grid cells
+    let num_cells_x = grid_state.as_ref().map(|gs| gs.size_x).unwrap_or(10);
+    let num_cells_z = grid_state.as_ref().map(|gs| gs.size_z).unwrap_or(10);
+    
+    // Calculate spacing to fit exactly within the plane dimensions
+    // Spacing = total dimension / number of cells
+    let spacing_x = size_x / num_cells_x as f32;
+    let spacing_z = size_z / num_cells_z as f32;
+    
+    // Number of lines = number of cells + 1 (lines at edges and between cells)
+    let num_lines_x = num_cells_x + 1;
+    let num_lines_z = num_cells_z + 1;
     
     // Create grid lines along X axis (parallel to Z) - these lines span the X direction
+    // Lines are placed from -half_size_z to +half_size_z
     for i in 0..num_lines_z {
-        let z = -half_size_z + (i as f32 * GRID_SPACING);
+        let z = -half_size_z + (i as f32 * spacing_z);
         commands.spawn((
             Mesh3d(meshes.add(Cylinder::new(GRID_LINE_RADIUS, size_x))),
             MeshMaterial3d(materials.add(GRID_COLOR)),
-            Transform::from_translation(Vec3::new(0.0, 0.0, z))
+            Transform::from_translation(Vec3::new(0.0, 0.02, z)) // Position at y=0.02 to appear in front of texture (texture is at y=0.01)
                 .with_rotation(Quat::from_rotation_z(std::f32::consts::FRAC_PI_2)),
+            Visibility::default(),
             crate::components::GridLine,
         ));
     }
     
     // Create grid lines along Z axis (parallel to X) - these lines span the Z direction
+    // Lines are placed from -half_size_x to +half_size_x
     for i in 0..num_lines_x {
-        let x = -half_size_x + (i as f32 * GRID_SPACING);
+        let x = -half_size_x + (i as f32 * spacing_x);
         commands.spawn((
             Mesh3d(meshes.add(Cylinder::new(GRID_LINE_RADIUS, size_z))),
             MeshMaterial3d(materials.add(GRID_COLOR)),
-            Transform::from_translation(Vec3::new(x, 0.0, 0.0))
+            Transform::from_translation(Vec3::new(x, 0.02, 0.0)) // Position at y=0.02 to appear in front of texture (texture is at y=0.01)
                 .with_rotation(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2)),
+            Visibility::default(),
             crate::components::GridLine,
         ));
     }
+    
+    // Create pink border around the perimeter
+    // Top edge (at +half_size_z, spanning X direction)
+    commands.spawn((
+        Mesh3d(meshes.add(Cylinder::new(GRID_BORDER_RADIUS, size_x))),
+        MeshMaterial3d(materials.add(GRID_BORDER_COLOR)),
+        Transform::from_translation(Vec3::new(0.0, 0.02, half_size_z))
+            .with_rotation(Quat::from_rotation_z(std::f32::consts::FRAC_PI_2)),
+        Visibility::default(),
+        crate::components::GridLine,
+    ));
+    
+    // Bottom edge (at -half_size_z, spanning X direction)
+    commands.spawn((
+        Mesh3d(meshes.add(Cylinder::new(GRID_BORDER_RADIUS, size_x))),
+        MeshMaterial3d(materials.add(GRID_BORDER_COLOR)),
+        Transform::from_translation(Vec3::new(0.0, 0.02, -half_size_z))
+            .with_rotation(Quat::from_rotation_z(std::f32::consts::FRAC_PI_2)),
+        Visibility::default(),
+        crate::components::GridLine,
+    ));
+    
+    // Left edge (at -half_size_x, spanning Z direction)
+    commands.spawn((
+        Mesh3d(meshes.add(Cylinder::new(GRID_BORDER_RADIUS, size_z))),
+        MeshMaterial3d(materials.add(GRID_BORDER_COLOR)),
+        Transform::from_translation(Vec3::new(-half_size_x, 0.02, 0.0))
+            .with_rotation(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2)),
+        Visibility::default(),
+        crate::components::GridLine,
+    ));
+    
+    // Right edge (at +half_size_x, spanning Z direction)
+    commands.spawn((
+        Mesh3d(meshes.add(Cylinder::new(GRID_BORDER_RADIUS, size_z))),
+        MeshMaterial3d(materials.add(GRID_BORDER_COLOR)),
+        Transform::from_translation(Vec3::new(half_size_x, 0.02, 0.0))
+            .with_rotation(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2)),
+        Visibility::default(),
+        crate::components::GridLine,
+    ));
 }
 
 pub fn spawn_textured_plane(

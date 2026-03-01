@@ -64,18 +64,21 @@ pub fn update_texture_aspect_ratio(
                         match texture_mode_state.current {
                             TextureMode::Normal => {
                                 // Maintain texture's original aspect ratio and center it
+                                // Use a fixed reference size (grid_z) so texture appears at same size regardless of aspect ratio
+                                let reference_size = grid_z; // Use grid_z as the reference for consistent sizing
+                                
                                 let (scale_x, scale_z, offset_x, offset_z) = if texture_aspect > plane_aspect {
                                     // Texture is wider relative to its height than the plane
-                                    // Fit texture to plane's width, scale height proportionally, center vertically
-                                    let scale = size_x / texture_width; // Scale to fit width
+                                    // Scale texture to fit reference width, maintain aspect ratio
+                                    let scale = reference_size / texture_width; // Scale based on reference size
                                     let scaled_height = texture_height * scale;
                                     let scale_z = scaled_height / size_z; // UV scale in Z direction
                                     let offset_z = (1.0 - scale_z) * 0.5; // Center vertically in UV space
                                     (1.0, scale_z, 0.0, offset_z)
                                 } else {
                                     // Texture is taller relative to its width than the plane
-                                    // Fit texture to plane's height, scale width proportionally, center horizontally
-                                    let scale = size_z / texture_height; // Scale to fit height
+                                    // Scale texture to fit reference height, maintain aspect ratio
+                                    let scale = reference_size / texture_height; // Scale based on reference size
                                     let scaled_width = texture_width * scale;
                                     let scale_x = scaled_width / size_x; // UV scale in X direction
                                     let offset_x = (1.0 - scale_x) * 0.5; // Center horizontally in UV space
@@ -91,8 +94,8 @@ pub fn update_texture_aspect_ratio(
                                 // Update material with UV transform
                                 material.uv_transform = uv_transform;
                             }
-                            TextureMode::Stretch => {
-                                // Stretch texture to fill the plane (default behavior)
+                            TextureMode::Fit => {
+                                // Fit texture to fill the plane (default behavior)
                                 material.uv_transform = Affine2::IDENTITY;
                             }
                         }

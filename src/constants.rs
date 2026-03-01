@@ -4,9 +4,10 @@
 use bevy::prelude::*;
 
 // Grid constants
-pub const GRID_SPACING: f32 = 1.0;
 pub const GRID_LINE_RADIUS: f32 = 0.005;
 pub const GRID_COLOR: Color = Color::srgb(0.5, 0.5, 0.5); // Mid gray
+pub const GRID_BORDER_RADIUS: f32 = 0.02; // Thicker border (2px equivalent)
+pub const GRID_BORDER_COLOR: Color = Color::srgb(1.0, 0.41, 0.71); // Pink
 
 // Camera constants
 pub const CAMERA_TOP_POSITION: Vec3 = Vec3::new(0.0, 15.0, 0.0);

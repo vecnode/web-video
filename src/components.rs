@@ -84,7 +84,7 @@ impl Default for AspectRatioState {
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum TextureMode {
     Normal,
-    Stretch,
+    Fit,
 }
 
 #[derive(Resource)]
@@ -96,8 +96,8 @@ pub struct TextureModeState {
 impl Default for TextureModeState {
     fn default() -> Self {
         Self {
-            current: TextureMode::Stretch,
-            previous: TextureMode::Stretch,
+            current: TextureMode::Fit,
+            previous: TextureMode::Fit,
         }
     }
 }
@@ -106,8 +106,7 @@ impl Default for TextureModeState {
 pub struct GridState {
     pub size_x: i32, // Grid size in X direction (meters)
     pub size_z: i32, // Grid size in Z direction (meters)
-    pub previous_size_x: i32,
-    pub previous_size_z: i32,
+    pub previous_size_z: i32, // Used to detect grid size changes for texture updates
 }
 
 impl Default for GridState {
@@ -115,8 +114,20 @@ impl Default for GridState {
         Self {
             size_x: 10,
             size_z: 10,
-            previous_size_x: 10,
             previous_size_z: 10,
+        }
+    }
+}
+
+#[derive(Resource)]
+pub struct GridVisibilityState {
+    pub is_visible: bool,
+}
+
+impl Default for GridVisibilityState {
+    fn default() -> Self {
+        Self {
+            is_visible: true, // Grid visible by default
         }
     }
 }

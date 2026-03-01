@@ -3,14 +3,14 @@
 
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
-use crate::components::{CameraProjectionState, EguiLayoutState, GridState, StreamsPanelState, LoadedTextures, AspectRatioState, AspectRatio, TextureModeState, TextureMode};
+use crate::components::{CameraProjectionState, EguiLayoutState, GridVisibilityState, StreamsPanelState, LoadedTextures, AspectRatioState, AspectRatio, TextureModeState, TextureMode};
 use crate::constants::{EGUI_TOP_BAR_HEIGHT, EGUI_SECOND_TOP_BAR_HEIGHT, EGUI_LEFT_PANEL_WIDTH};
 
 pub fn egui_controls_ui(
     mut contexts: EguiContexts,
     mut projection_state: ResMut<CameraProjectionState>,
     mut layout_state: ResMut<EguiLayoutState>,
-    mut grid_state: ResMut<GridState>,
+    mut grid_visibility_state: ResMut<GridVisibilityState>,
     mut streams_panel_state: ResMut<StreamsPanelState>,
     loaded_textures: Res<LoadedTextures>,
     mut aspect_ratio_state: ResMut<AspectRatioState>,
@@ -72,6 +72,41 @@ pub fn egui_controls_ui(
                                     projection_state.last_perspective_fov = persp.fov;
                                 }
                                 
+                                // Handle mouse scroll for FOV adjustment
+                                if let Projection::Perspective(ref mut persp) = *projection {
+                                    // Check if mouse is over the 3D viewport
+                                    if let Some(pointer_pos) = ctx.pointer_latest_pos() {
+                                        let viewport_rect = ctx.viewport_rect();
+                                        let is_in_viewport = pointer_pos.x >= layout_state.left_panel_end_x
+                                            && pointer_pos.x <= (if layout_state.inspector_collapsed {
+                                                viewport_rect.right()
+                                            } else {
+                                                layout_state.right_panel_start_x
+                                            })
+                                            && pointer_pos.y >= layout_state.top_bars_height
+                                            && pointer_pos.y <= (viewport_rect.bottom() - layout_state.bottom_bar_height);
+                                        
+                                        if is_in_viewport {
+                                            // Get scroll delta from egui - use raw_scroll_delta
+                                            let scroll_delta = ctx.input(|i| i.raw_scroll_delta.y);
+                                            
+                                            if scroll_delta.abs() > 0.0 {
+                                                // Convert current FOV to degrees
+                                                let mut fov_degrees = persp.fov.to_degrees();
+                                                
+                                                // Scroll down (positive y) increases FOV, scroll up (negative y) decreases FOV
+                                                let fov_change = scroll_delta * 0.05; // Adjust sensitivity (1 degree per pixel)
+                                                fov_degrees += fov_change;
+                                                
+                                                // Clamp FOV to reasonable bounds (30-120 degrees)
+                                                fov_degrees = fov_degrees.clamp(30.0, 120.0);
+                                                
+                                                // Update FOV
+                                                persp.fov = fov_degrees.to_radians();
+                                            }
+                                        }
+                                    }
+                                }
                                 
                                 // FOV control for Perspective projection
                                 if let Projection::Perspective(ref mut persp) = *projection {
@@ -91,26 +126,17 @@ pub fn egui_controls_ui(
                             ui.separator();
                             
                             // Grid controls section
-                            ui.label("Grid Size (meters)");
+                            ui.label("Grid");
                             
-                            // X dimension input
-                            let mut size_x = grid_state.size_x;
-                            if ui.add(egui::DragValue::new(&mut size_x)
-                                .range(1..=100)
-                                .speed(1)
-                                .prefix("X: ")
-                                .suffix(" m")).changed() {
-                                grid_state.size_x = size_x;
-                            }
+                            // Show/Hide Grid button
+                            let button_text = if grid_visibility_state.is_visible {
+                                "Hide Grid"
+                            } else {
+                                "Show Grid"
+                            };
                             
-                            // Z dimension input
-                            let mut size_z = grid_state.size_z;
-                            if ui.add(egui::DragValue::new(&mut size_z)
-                                .range(1..=100)
-                                .speed(1)
-                                .prefix("Z: ")
-                                .suffix(" m")).changed() {
-                                grid_state.size_z = size_z;
+                            if ui.button(button_text).clicked() {
+                                grid_visibility_state.is_visible = !grid_visibility_state.is_visible;
                             }
                             
                             ui.separator();
@@ -148,10 +174,10 @@ pub fn egui_controls_ui(
                                 }
                                 
                                 if ui.selectable_label(
-                                    texture_mode_state.current == TextureMode::Stretch,
-                                    "Stretch"
+                                    texture_mode_state.current == TextureMode::Fit,
+                                    "Fit"
                                 ).clicked() {
-                                    texture_mode_state.current = TextureMode::Stretch;
+                                    texture_mode_state.current = TextureMode::Fit;
                                 }
                             });
                         }); // Close vertical
